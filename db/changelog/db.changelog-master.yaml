@@ -1,0 +1,11 @@
+databaseChangeLog:
+
+  # ── DDL: Estructura de las tablas (orden importa por las FK) ──
+  - includeAll:
+      path: db/changelog/ddl/
+      relativeToChangelogFile: false
+
+  # ── DML: Datos de prueba y operaciones básicas ──
+  - includeAll:
+      path: db/changelog/dml/
+      relativeToChangelogFile: false

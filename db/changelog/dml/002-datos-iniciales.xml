@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- ============================================================
+         CHANGESET DML-001: Datos iniciales - Roles
+    ============================================================ -->
+    <changeSet id="DML-001-insertar-roles" author="estudiante">
+        <insert tableName="rol">
+            <column name="nombre" value="administrador"/>
+            <column name="descripcion" value="Acceso total al sistema"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        <insert tableName="rol">
+            <column name="nombre" value="vendedor"/>
+            <column name="descripcion" value="Puede crear facturas y gestionar productos"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        <insert tableName="rol">
+            <column name="nombre" value="cliente"/>
+            <column name="descripcion" value="Puede realizar compras"/>
+            <column name="activo" valueBoolean="true"/>
+        </insert>
+        <rollback>
+            <delete tableName="rol">
+                <where>nombre IN ('administrador','vendedor','cliente')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DML-002: Datos iniciales - Personas
+    ============================================================ -->
+    <changeSet id="DML-002-insertar-personas" author="estudiante">
+        <insert tableName="persona">
+            <column name="nombre" value="Carlos"/>
+            <column name="apellido" value="Pérez"/>
+            <column name="correo" value="carlos.perez@ejemplo.com"/>
+            <column name="telefono" value="3001234567"/>
+            <column name="fecha_nacimiento" valueDate="1990-05-15"/>
+        </insert>
+        <insert tableName="persona">
+            <column name="nombre" value="Ana"/>
+            <column name="apellido" value="García"/>
+            <column name="correo" value="ana.garcia@ejemplo.com"/>
+            <column name="telefono" value="3107654321"/>
+            <column name="fecha_nacimiento" valueDate="1995-08-22"/>
+        </insert>
+        <insert tableName="persona">
+            <column name="nombre" value="Luis"/>
+            <column name="apellido" value="Martínez"/>
+            <column name="correo" value="luis.martinez@ejemplo.com"/>
+            <column name="telefono" value="3209876543"/>
+            <column name="fecha_nacimiento" valueDate="1988-11-30"/>
+        </insert>
+        <rollback>
+            <delete tableName="persona">
+                <where>correo IN ('carlos.perez@ejemplo.com','ana.garcia@ejemplo.com','luis.martinez@ejemplo.com')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DML-003: Datos iniciales - Usuarios
+         Contraseñas: hash de "password123" (solo ejemplo educativo)
+    ============================================================ -->
+    <changeSet id="DML-003-insertar-usuarios" author="estudiante">
+        <insert tableName="usuario">
+            <column name="nombre_usuario" value="cperez"/>
+            <column name="contrasena_hash" value="$2b$10$hasheado_solo_para_ejemplo_001"/>
+            <column name="activo" valueBoolean="true"/>
+            <column name="id_persona" valueComputed="(SELECT id_persona FROM persona WHERE correo='carlos.perez@ejemplo.com')"/>
+            <column name="id_rol" valueComputed="(SELECT id_rol FROM rol WHERE nombre='administrador')"/>
+        </insert>
+        <insert tableName="usuario">
+            <column name="nombre_usuario" value="agarcia"/>
+            <column name="contrasena_hash" value="$2b$10$hasheado_solo_para_ejemplo_002"/>
+            <column name="activo" valueBoolean="true"/>
+            <column name="id_persona" valueComputed="(SELECT id_persona FROM persona WHERE correo='ana.garcia@ejemplo.com')"/>
+            <column name="id_rol" valueComputed="(SELECT id_rol FROM rol WHERE nombre='vendedor')"/>
+        </insert>
+        <insert tableName="usuario">
+            <column name="nombre_usuario" value="lmartinez"/>
+            <column name="contrasena_hash" value="$2b$10$hasheado_solo_para_ejemplo_003"/>
+            <column name="activo" valueBoolean="true"/>
+            <column name="id_persona" valueComputed="(SELECT id_persona FROM persona WHERE correo='luis.martinez@ejemplo.com')"/>
+            <column name="id_rol" valueComputed="(SELECT id_rol FROM rol WHERE nombre='cliente')"/>
+        </insert>
+        <rollback>
+            <delete tableName="usuario">
+                <where>nombre_usuario IN ('cperez','agarcia','lmartinez')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DML-004: Datos iniciales - Productos
+    ============================================================ -->
+    <changeSet id="DML-004-insertar-productos" author="estudiante">
+        <insert tableName="producto">
+            <column name="nombre" value="Laptop Lenovo IdeaPad"/>
+            <column name="descripcion" value="Portátil 15.6 pulgadas, 8GB RAM, 256GB SSD"/>
+            <column name="precio" valueNumeric="2500000"/>
+            <column name="stock" valueNumeric="10"/>
+        </insert>
+        <insert tableName="producto">
+            <column name="nombre" value="Mouse Inalámbrico Logitech"/>
+            <column name="descripcion" value="Mouse ergonómico con receptor USB"/>
+            <column name="precio" valueNumeric="85000"/>
+            <column name="stock" valueNumeric="50"/>
+        </insert>
+        <insert tableName="producto">
+            <column name="nombre" value="Teclado Mecánico Redragon"/>
+            <column name="descripcion" value="Teclado gaming con retroiluminación RGB"/>
+            <column name="precio" valueNumeric="220000"/>
+            <column name="stock" valueNumeric="25"/>
+        </insert>
+        <rollback>
+            <delete tableName="producto">
+                <where>nombre IN ('Laptop Lenovo IdeaPad','Mouse Inalámbrico Logitech','Teclado Mecánico Redragon')</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DML-005: Datos iniciales - Factura de ejemplo
+    ============================================================ -->
+    <changeSet id="DML-005-insertar-factura" author="estudiante">
+        <insert tableName="factura">
+            <column name="total" valueNumeric="2585000"/>
+            <column name="estado" value="pagada"/>
+            <column name="id_usuario" valueComputed="(SELECT id_usuario FROM usuario WHERE nombre_usuario='lmartinez')"/>
+        </insert>
+        <rollback>
+            <delete tableName="factura">
+                <where>estado = 'pagada'</where>
+            </delete>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DML-006: Datos iniciales - Detalle de la factura
+    ============================================================ -->
+    <changeSet id="DML-006-insertar-detalle-factura" author="estudiante">
+        <insert tableName="detalle_factura">
+            <column name="cantidad" valueNumeric="1"/>
+            <column name="precio_unitario" valueNumeric="2500000"/>
+            <column name="subtotal" valueNumeric="2500000"/>
+            <column name="id_factura" valueComputed="(SELECT id_factura FROM factura ORDER BY id_factura DESC LIMIT 1)"/>
+            <column name="id_producto" valueComputed="(SELECT id_producto FROM producto WHERE nombre='Laptop Lenovo IdeaPad')"/>
+        </insert>
+        <insert tableName="detalle_factura">
+            <column name="cantidad" valueNumeric="1"/>
+            <column name="precio_unitario" valueNumeric="85000"/>
+            <column name="subtotal" valueNumeric="85000"/>
+            <column name="id_factura" valueComputed="(SELECT id_factura FROM factura ORDER BY id_factura DESC LIMIT 1)"/>
+            <column name="id_producto" valueComputed="(SELECT id_producto FROM producto WHERE nombre='Mouse Inalámbrico Logitech')"/>
+        </insert>
+        <rollback>
+            <delete tableName="detalle_factura"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>

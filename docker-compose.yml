@@ -1,0 +1,55 @@
+version: "3.9"
+
+# =====================================================================
+# Docker Compose - Proyecto Liquibase MGBD
+#
+# Servicios:
+#   db        → PostgreSQL 15 (motor de base de datos)
+#   liquibase → Ejecuta las migraciones DDL y DML
+#
+# El profesor puede validar con:
+#   docker compose run --rm liquibase validate
+#   docker compose run --rm liquibase update
+#   docker compose run --rm liquibase status --verbose
+# =====================================================================
+
+services:
+
+  # ── Base de datos PostgreSQL ──────────────────────────────────────
+  db:
+    image: postgres:15-alpine
+    container_name: mgbd_liquibase_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB:       mgbd_liquibase
+      POSTGRES_USER:     postgres
+      POSTGRES_PASSWORD: postgres123
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d mgbd_liquibase"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Liquibase (ejecuta migraciones) ──────────────────────────────
+  liquibase:
+    image: liquibase/liquibase:4.27
+    container_name: mgbd_liquibase_runner
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./db:/liquibase/db
+    environment:
+      LIQUIBASE_COMMAND_URL:      jdbc:postgresql://db:5432/mgbd_liquibase
+      LIQUIBASE_COMMAND_USERNAME: postgres
+      LIQUIBASE_COMMAND_PASSWORD: postgres123
+      LIQUIBASE_COMMAND_CHANGELOG_FILE: db/changelog/db.changelog-master.yaml
+    # Por defecto aplica el update al levantar
+    command: update
+
+volumes:
+  postgres_data:

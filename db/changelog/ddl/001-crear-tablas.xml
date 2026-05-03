@@ -1,0 +1,222 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+    xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.9.xsd">
+
+    <!-- ============================================================
+         CHANGESET DDL-001: Tabla ROL
+         Guarda los roles del sistema (admin, cliente, vendedor, etc.)
+    ============================================================ -->
+    <changeSet id="DDL-001-crear-rol" author="estudiante">
+        <createTable tableName="rol">
+            <column name="id_rol" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(50)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="descripcion" type="VARCHAR(255)"/>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="rol"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DDL-002: Tabla PERSONA
+         Guarda datos personales de cada individuo
+    ============================================================ -->
+    <changeSet id="DDL-002-crear-persona" author="estudiante">
+        <createTable tableName="persona">
+            <column name="id_persona" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="apellido" type="VARCHAR(100)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="correo" type="VARCHAR(150)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="telefono" type="VARCHAR(20)"/>
+            <column name="fecha_nacimiento" type="DATE"/>
+        </createTable>
+        <rollback>
+            <dropTable tableName="persona"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DDL-003: Tabla USUARIO
+         Relaciona persona y rol para el acceso al sistema
+    ============================================================ -->
+    <changeSet id="DDL-003-crear-usuario" author="estudiante">
+        <createTable tableName="usuario">
+            <column name="id_usuario" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre_usuario" type="VARCHAR(80)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="contrasena_hash" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+            <column name="fecha_creacion" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Llave foránea hacia persona -->
+            <column name="id_persona" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Llave foránea hacia rol -->
+            <column name="id_rol" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="usuario"
+            baseColumnNames="id_persona"
+            constraintName="fk_usuario_persona"
+            referencedTableName="persona"
+            referencedColumnNames="id_persona"
+            onDelete="RESTRICT"/>
+
+        <addForeignKeyConstraint
+            baseTableName="usuario"
+            baseColumnNames="id_rol"
+            constraintName="fk_usuario_rol"
+            referencedTableName="rol"
+            referencedColumnNames="id_rol"
+            onDelete="RESTRICT"/>
+
+        <rollback>
+            <dropTable tableName="usuario"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DDL-004: Tabla PRODUCTO
+         Catálogo de productos disponibles para la venta
+    ============================================================ -->
+    <changeSet id="DDL-004-crear-producto" author="estudiante">
+        <createTable tableName="producto">
+            <column name="id_producto" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="nombre" type="VARCHAR(150)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="descripcion" type="TEXT"/>
+            <column name="precio" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="stock" type="INT" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="activo" type="BOOLEAN" defaultValueBoolean="true">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <rollback>
+            <dropTable tableName="producto"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DDL-005: Tabla FACTURA
+         Registra cada venta/transacción realizada
+    ============================================================ -->
+    <changeSet id="DDL-005-crear-factura" author="estudiante">
+        <createTable tableName="factura">
+            <column name="id_factura" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="fecha_emision" type="TIMESTAMP" defaultValueComputed="NOW()">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total" type="NUMERIC(14,2)" defaultValueNumeric="0">
+                <constraints nullable="false"/>
+            </column>
+            <column name="estado" type="VARCHAR(30)" defaultValue="pendiente">
+                <constraints nullable="false"/>
+            </column>
+            <!-- El usuario que realizó la compra -->
+            <column name="id_usuario" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="factura"
+            baseColumnNames="id_usuario"
+            constraintName="fk_factura_usuario"
+            referencedTableName="usuario"
+            referencedColumnNames="id_usuario"
+            onDelete="RESTRICT"/>
+
+        <rollback>
+            <dropTable tableName="factura"/>
+        </rollback>
+    </changeSet>
+
+    <!-- ============================================================
+         CHANGESET DDL-006: Tabla DETALLE_FACTURA
+         Líneas de cada factura (qué productos y cuántos)
+    ============================================================ -->
+    <changeSet id="DDL-006-crear-detalle-factura" author="estudiante">
+        <createTable tableName="detalle_factura">
+            <column name="id_detalle" type="SERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="cantidad" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="precio_unitario" type="NUMERIC(12,2)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="subtotal" type="NUMERIC(14,2)">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Llave foránea hacia factura -->
+            <column name="id_factura" type="INT">
+                <constraints nullable="false"/>
+            </column>
+            <!-- Llave foránea hacia producto -->
+            <column name="id_producto" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint
+            baseTableName="detalle_factura"
+            baseColumnNames="id_factura"
+            constraintName="fk_detalle_factura"
+            referencedTableName="factura"
+            referencedColumnNames="id_factura"
+            onDelete="CASCADE"/>
+
+        <addForeignKeyConstraint
+            baseTableName="detalle_factura"
+            baseColumnNames="id_producto"
+            constraintName="fk_detalle_producto"
+            referencedTableName="producto"
+            referencedColumnNames="id_producto"
+            onDelete="RESTRICT"/>
+
+        <rollback>
+            <dropTable tableName="detalle_factura"/>
+        </rollback>
+    </changeSet>
+
+</databaseChangeLog>
